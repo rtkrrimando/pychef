@@ -70,7 +70,7 @@ class ChefAPI(object):
     env_value_re = re.compile(r'ENV\[(.+)\]')
     ruby_string_re = re.compile(r'^\s*(["\'])(.*?)\1\s*$')
 
-    def __init__(self, url, key, client, version='0.10.8', headers={}):
+    def __init__(self, url, key, client, validation_client_name, validation_key, version='0.10.8', headers={}):
         self.url = url.rstrip('/')
         self.parsed_url = urlparse.urlparse(self.url)
         if not isinstance(key, Key):
@@ -80,6 +80,8 @@ class ChefAPI(object):
         self.key = key
         self.client = client
         self.version = version
+        self.validation_client_name = validation_client_name
+        self.validation_key = validation_key
         self.headers = dict((k.lower(), v) for k, v in headers.iteritems())
         self.version_parsed = pkg_resources.parse_version(self.version)
         self.platform = self.parsed_url.hostname == 'api.opscode.com'
@@ -128,6 +130,12 @@ class ChefAPI(object):
             if key == 'chef_server_url':
                 log.debug('Found URL: %r', value)
                 url = value
+            elif key == 'validation_client_name':
+                log.debug('Found validation_client_name: %r', value)
+                validation_client_name = value
+            elif key == 'validation_key':
+                log.debug('Found validation_key: %r', value)
+                validation_key = value
             elif key == 'node_name':
                 log.debug('Found client name: %r', value)
                 client_name = value
@@ -150,6 +158,8 @@ class ChefAPI(object):
                 url = data.get('chef_server_url')
                 client_name = data.get('node_name')
                 key_path = data.get('client_key')
+                validation_key = data.get('validation_key')
+                validation_client_name = data.get('validation_client_name')
             else:
                 log.debug('Ruby parse failed with exit code %s: %s', proc.returncode, out.strip())
         if not url:
@@ -165,7 +175,7 @@ class ChefAPI(object):
             return
         if not client_name:
             client_name = socket.getfqdn()
-        return cls(url, key_path, client_name)
+        return cls(url, key_path, client_name, validation_client_name, validation_key)
 
     @staticmethod
     def get_global():
