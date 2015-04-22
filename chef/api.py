@@ -98,7 +98,7 @@ class ChefAPI(object):
             # Can't even read the config file
             log.debug('Unable to read config file "%s"', path)
             return
-        url = key_path = client_name = None
+        url = key_path = client_name = validation_client_name = validation_key = None
         for line in open(path):
             if not line.strip() or line.startswith('#'):
                 continue # Skip blanks and comments
